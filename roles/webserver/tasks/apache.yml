@@ -1,0 +1,30 @@
+---
+- name: install apache
+  apt: name=apache2 state=present
+- name: enabled mod_rewrite
+  apache2_module: name=rewrite state=present
+- name: copy new virtual host
+  template: 
+    src=virtual-hosts.conf.j2 
+    dest=/etc/apache2/sites-available/vagrant.conf
+- name: remove default virtual host
+  file:
+    path=/etc/apache2/sites-enabled/000-default.conf
+    state=absent
+- name: enable new vagrant virtual host
+  file:
+    src=/etc/apache2/sites-available/vagrant.conf
+    dest=/etc/apache2/sites-enabled/vagrant.conf
+    state=link
+  notify:
+    - reload apache
+- name: remove initial envvars file
+  file:
+    path=/etc/apache2/envvars
+    state=absent
+- name: set vagrant as apache user
+  template:
+    src=envvars.j2
+    dest=/etc/apache2/envvars
+  notify:
+    - reload apache
